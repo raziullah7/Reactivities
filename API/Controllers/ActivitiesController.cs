@@ -8,9 +8,9 @@ public class ActivitiesController : BaseApiController
 {
     // the route will be: "api/activities"
     [HttpGet] 
-    public async Task<ActionResult<List<Activity>>> GetActivities()
+    public async Task<ActionResult<List<Activity>>> GetActivities(CancellationToken cancellationToken)
     {
-        return await Mediator.Send(new List.Query());
+        return await Mediator.Send(new List.Query(), cancellationToken);
     }
 
     // the route will be: "api/activities/{Guid id for the Activity}"
@@ -29,7 +29,7 @@ public class ActivitiesController : BaseApiController
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateActivity(Guid id, Activity activity)
+    public async Task<IActionResult> EditActivity(Guid id, Activity activity)
     {
         activity.Id = id;
         await Mediator.Send(new Edit.Command { Activity = activity });
