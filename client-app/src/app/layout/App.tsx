@@ -4,6 +4,7 @@ import {Container} from "semantic-ui-react";
 import {Activity} from '../models/activity';
 import NavBar from './NavBar';
 import ActivityDashboard from '../../features/activities/dashboard/ActivityDashboard';
+import {v4 as uuid} from 'uuid';
 
 function App() {
     // useState to HOLD the server response
@@ -35,9 +36,13 @@ function App() {
         // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         activity.id
             ? setActivities([...activities.filter(x => x.id !== activity.id), activity])
-            : setActivities([...activities, activity]);
+            : setActivities([...activities, {...activity, id: uuid()} ]);
         setEditMode(false);
         setSelectedActivity(activity);
+    }
+
+    function handleDeleteActivity(id: string) {
+        setActivities([...activities.filter(x => x.id !== id)])
     }
 
     // useEffect to GET the server response after making the query
@@ -59,6 +64,7 @@ function App() {
                     openForm={handleOpenForm}
                     closeForm={handleCloseForm}
                     createOrEdit={handleCreateOrEditActivity}
+                    deleteActivity={handleDeleteActivity}
                 />
             </Container>
 
