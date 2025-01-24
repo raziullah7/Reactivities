@@ -6,13 +6,17 @@ import ActivityDashboard from '../../features/activities/dashboard/ActivityDashb
 import {v4 as uuid} from 'uuid';
 import agent from "../api/agent.ts";
 import LoadingComponent from "./LoadingComponent.tsx";
+import {useStore} from "../stores/store.ts";
+import {observer} from "mobx-react-lite";
 
+// eslint-disable-next-line react-refresh/only-export-components
 function App() {
+    const {activityStore} = useStore();
+
     // useState to HOLD the server response
     const [activities, setActivities] = useState<Activity[]>([]);
     const [selectedActivity, setSelectedActivity] = useState<Activity | undefined>(undefined)
     const [editMode, setEditMode] = useState(false)
-    const [loading, setLoading] = useState<boolean>(true);
     const [submitting, setSubmitting] = useState<boolean>(false);
 
     // "View" button functionality on each Activity
@@ -69,25 +73,17 @@ function App() {
 
     // useEffect to GET the server response after making the query
     useEffect(() => {
-        agent.Activities.list().then(response => {
-            const theActivities: Activity[] = [];
-            response.forEach(activity => {
-                activity.date = activity.date.split('T')[0];
-                theActivities.push(activity);
-            })
-            setActivities(theActivities);
-            setLoading(false);
-        })
-    }, [])
+        activityStore.loadActivities();
+    }, [activityStore])
 
-    if (loading) return <LoadingComponent content="Loading App"/>;
+    if (activityStore.loadingInitial) return <LoadingComponent content="Loading App"/>;
 
     return (
         <>
             <NavBar openForm={handleOpenForm}/>
             <Container style={{marginTop: '7em'}}>
                 <ActivityDashboard
-                    activities={activities}
+                    activities={activityStore.activities}
                     selectedActivity={selectedActivity}
                     selectActivity={handleSelectActivity}
                     cancelSelectActivity={handleCancelSelectActivity}
@@ -104,4 +100,4 @@ function App() {
     )
 }
 
-export default App
+export default observer(App);
