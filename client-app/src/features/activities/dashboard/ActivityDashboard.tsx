@@ -1,57 +1,31 @@
 import {Grid, GridColumn} from "semantic-ui-react";
-import {Activity} from "../../../app/models/activity";
 import ActivityList from "./ActivityList";
 import ActivityDetails from "../details/ActivityDetails";
 import ActivityForm from "../form/ActivityForm";
+import {useStore} from "../../../app/stores/store.ts";
+import {observer} from "mobx-react-lite";
 
-interface Props {
-    activities: Activity[]
-    selectedActivity: Activity | undefined
-    selectActivity: (id: string) => void
-    cancelSelectActivity: () => void
-    editMode: boolean
-    openForm: (id: string) => void
-    closeForm: () => void
-    createOrEdit: (activity: Activity) => void
-    deleteActivity: (id: string) => void
-    submitting: boolean
-}
+function ActivityDashboard() {
 
-export default function ActivityDashboard(
-    {
-        activities, selectedActivity, selectActivity, cancelSelectActivity,
-        editMode, openForm, closeForm, createOrEdit, deleteActivity, submitting
-    }: Props) {
+    const {activityStore} = useStore();
+    const {selectedActivity, editMode} = activityStore;
+
     return (
         <Grid>
             <GridColumn width='10'>
-                <ActivityList
-                    activities={activities}
-                    selectActivity={selectActivity}
-                    deleteActivity={deleteActivity}
-                    submitting={submitting}
-                />
+                <ActivityList />
             </GridColumn>
             <GridColumn width='6'>
-                {   // display ActivityDetails if selectedActivity is not NULL
-                    // and editMode is FALSE
-                    (selectedActivity && !editMode) &&
-                    <ActivityDetails
-                        activity={selectedActivity}
-                        cancelSelectActivity={cancelSelectActivity}
-                        openForm={openForm}
-                    />
+                {   // display ActivityDetails if selectedActivity is not NULL and editMode is FALSE
+                    selectedActivity && !editMode && <ActivityDetails />
                 }
-                {// display the Activity if editMode is TRUE
-                    editMode &&
-                    <ActivityForm
-                        closeForm={closeForm}
-                        activity={selectedActivity}
-                        createOrEdit={createOrEdit}
-                        submitting={submitting}
-                    />
+                {   // display the Activity if editMode is TRUE
+                    editMode && <ActivityForm />
                 }
             </GridColumn>
         </Grid>
     )
 }
+
+const ActivityDashboardObserver = observer(ActivityDashboard);
+export default ActivityDashboardObserver;

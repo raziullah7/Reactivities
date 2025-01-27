@@ -9,28 +9,25 @@ import {
     Label,
     Segment
 } from "semantic-ui-react";
-import {Activity} from "../../../app/models/activity";
 import {SyntheticEvent, useState} from "react";
+import {useStore} from "../../../app/stores/store.ts";
+import {observer} from "mobx-react-lite";
 
-interface Props {
-    activities: Activity[]
-    submitting: boolean;
-    selectActivity: (id: string) => void
-    deleteActivity: (id: string) => void
-}
+function ActivityList() {
+    const {activityStore} = useStore();
+    const {selectActivity, deleteActivity, activitiesByDate, loading} = activityStore;
 
-export default function ActivityList({activities, selectActivity, deleteActivity, submitting}: Props) {
     const [target, setTarget] = useState("");
 
-    function handleActivityDelete(eve: SyntheticEvent<HTMLButtonElement>, id: string) {
+    async function handleActivityDelete(eve: SyntheticEvent<HTMLButtonElement>, id: string) {
         setTarget(eve.currentTarget.name);
-        deleteActivity(id);
+        await deleteActivity(id);
     }
 
     return (
         <Segment>
             <ItemGroup divided>
-                {activities.map(activity => (
+                {activitiesByDate.map(activity => (
                     <Item key={activity.id} style={{display: "block"}}>
                         <ItemHeader as='a'>{activity.title}</ItemHeader>
                         <ItemMeta>{activity.date}</ItemMeta>
@@ -46,7 +43,7 @@ export default function ActivityList({activities, selectActivity, deleteActivity
                             <Button
                                 onClick={(eve) => handleActivityDelete(eve, activity.id)}
                                 floated="right" content="Delete" color="red"
-                                loading={submitting && target === activity.id}
+                                loading={loading && target === activity.id}
                                 name={activity.id}
                             />
                             <Label basic content={activity.category}/>
@@ -57,3 +54,6 @@ export default function ActivityList({activities, selectActivity, deleteActivity
         </Segment>
     );
 }
+
+const ActivityListObserver = observer(ActivityList);
+export default ActivityListObserver;
