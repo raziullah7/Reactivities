@@ -8,7 +8,7 @@ export default class ActivityStore {
     selectedActivity: Activity | undefined = undefined;
     editMode = false;
     loading = false;
-    loadingInitial = true;
+    loadingInitial = false;
 
     constructor() {
         makeAutoObservable(this);
@@ -21,14 +21,30 @@ export default class ActivityStore {
         );
     }
 
+    // action to set loadingInitial to NOT use runInAction()
+    setLoadingInitial = (state: boolean) => {
+        this.loadingInitial = state;
+    }
+
+    // action to search for an activity from memory and return it
+    private getActivity = (id: string) => {
+        return this.activityRegistry.get(id);
+    }
+
+    private setActivity = (activity: Activity) => {
+        activity.date = activity.date.split("T")[0];
+        this.activityRegistry.set(activity.id, activity);
+    }
+
+    //-------------------------------------------------------------------------------------------------
     // action to load Activities from the API
     loadActivities = async () => {
+        this.setLoadingInitial(true);
         try {
             const activities = await agent.Activities.list();
             runInAction(() => {
                 activities.forEach(activity => {
-                    activity.date = activity.date.split("T")[0];
-                    this.activityRegistry.set(activity.id, activity);
+                    this.setActivity(activity);
                 })
                 this.setLoadingInitial(false);
             })
@@ -37,38 +53,6 @@ export default class ActivityStore {
             console.log(error);
             this.setLoadingInitial(false);
         }
-    }
-
-    // action to set loadingInitial to NOT use runInAction()
-    setLoadingInitial = (state: boolean) => {
-        this.loadingInitial = state;
-    }
-
-    // action to assign an activity to selectedActivity
-    selectActivity = (id: string) => {
-        this.selectedActivity = this.activityRegistry.get(id);
-    }
-
-    // action to assign 'undefined' or de-select the selectedActivity
-    cancelSelectedActivity = () => {
-        this.selectedActivity = undefined;
-    }
-
-    // action to open the edit form (Edit an existing activity or Create a new activity)
-    openForm = (id?: string) => {
-        if (id) {
-            // Editing an existing activity
-            this.selectActivity(id);
-        } else {
-            // Creating a new activity
-            this.cancelSelectedActivity();
-        }
-        this.editMode = true;
-    }
-
-    // action to close the edit form
-    closeForm = () => {
-        this.editMode = false;
     }
 
     // Create activity
@@ -125,10 +109,6 @@ export default class ActivityStore {
             runInAction(() => {
                 // remove the activity being deleted from the list
                 this.activityRegistry.delete(id);
-
-                if (this.selectedActivity?.id === id) {
-                    this.cancelSelectedActivity();
-                }
                 this.loading = false;
             })
         } catch (error) {
@@ -136,6 +116,32 @@ export default class ActivityStore {
             runInAction(() => {
                 this.loading = false;
             })
+        }
+    }
+
+    // GET Detail of an activity (from the memory, otherwise from the API)
+    loadActivity = async (id: string) => {
+        let activity = this.getActivity(id);
+        if (activity) {
+            runInAction(() => {
+                this.selectedActivity = activity;
+            })
+            return activity;
+        }
+        else {
+            this.setLoadingInitial(true);
+            try {
+                activity = await agent.Activities.details(id);
+                this.setActivity(activity);
+                runInAction(() => {
+                    this.selectedActivity = activity;
+                })
+                this.setLoadingInitial(false);
+                return activity;
+            } catch (error) {
+                console.log(error);
+                this.setLoadingInitial(false);
+            }
         }
     }
 }

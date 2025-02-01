@@ -1,13 +1,21 @@
 import {Button, ButtonGroup, Card, CardContent, CardDescription, CardHeader, CardMeta, Image} from "semantic-ui-react";
 import {useStore} from "../../../app/stores/store.ts";
 import LoadingComponent from "../../../app/layout/LoadingComponent.tsx";
+import {Link, useParams} from "react-router-dom";
+import {useEffect} from "react";
+import {observer} from "mobx-react-lite";
 
-export default function ActivityDetails() {
-    const {activityStore} = useStore();
-    const {selectedActivity: activity, openForm, cancelSelectedActivity} = activityStore;
+function ActivityDetails() {
+    const {activityStore, } = useStore();
+    const {selectedActivity: activity, loadActivity, loadingInitial} = activityStore;
+    const {id} = useParams();
 
-    // to avoid the error that activity can be undefined as defined in the store
-    if (!activity) return <LoadingComponent />;
+    useEffect(() => {
+        if (id) loadActivity(id);
+    }, [id, loadActivity]);
+
+    // to avoid the error that activity can be Activity | undefined
+    if (loadingInitial || !activity) return <LoadingComponent />;
 
     return (
         <Card fluid>
@@ -19,16 +27,17 @@ export default function ActivityDetails() {
             </CardContent>
             <CardContent extra>
                 <ButtonGroup widths="2">
-                    <Button
-                        basic color="blue" content="Edit"
-                        onClick={() => openForm(activity.id)}
+                    <Button as={Link} to={`/manage/${activity.id}`}
+                            basic color="blue" content="Edit"
                     />
-                    <Button
-                        basic color="grey" content="Cancel" type="button"
-                        onClick={() => cancelSelectedActivity()}
+                    <Button as={Link} to="/activities"
+                            basic color="grey" content="Cancel" type="button"
                     />
                 </ButtonGroup>
             </CardContent>
         </Card>
     );
 }
+
+const ActivityDetailsObserver = observer(ActivityDetails);
+export default ActivityDetailsObserver;

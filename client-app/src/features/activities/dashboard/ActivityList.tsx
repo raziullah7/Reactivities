@@ -12,10 +12,11 @@ import {
 import {SyntheticEvent, useState} from "react";
 import {useStore} from "../../../app/stores/store.ts";
 import {observer} from "mobx-react-lite";
+import {Link} from "react-router-dom";
 
 function ActivityList() {
     const {activityStore} = useStore();
-    const {selectActivity, deleteActivity, activitiesByDate, loading} = activityStore;
+    const {deleteActivity, activitiesByDate, loading} = activityStore;
 
     const [target, setTarget] = useState("");
 
@@ -37,7 +38,7 @@ function ActivityList() {
                         </ItemDescription>
                         <ItemExtra>
                             <Button
-                                onClick={() => selectActivity(activity.id)}
+                                as={Link} to={`/activities/${activity.id}`}
                                 floated="right" content="View" color="blue"
                             />
                             <Button
